@@ -65,6 +65,7 @@ SHAP (SHapley Additive exPlanations) was used to:
 - Avoid misleading explanations for Low stress cases by design
 
 This ensures explanations are actionable and user-appropriate.
+```
 
 ## Model Files
 
