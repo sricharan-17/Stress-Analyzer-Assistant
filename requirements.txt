@@ -3,10 +3,5 @@ pandas
 scikit-learn
 shap
 joblib
-requests
-
-Note: Ollama must be installed and running locally for recommendations.
-
-Disclaimer
-
-This project is for educational and informational purposes only and does not provide medical advice.
+groq
+python-dotenv

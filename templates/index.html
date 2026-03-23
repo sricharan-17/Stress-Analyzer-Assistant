@@ -2,10 +2,13 @@
 <html>
 <head>
     <title>Stress Analyzer & Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
-<h1>Stress Analyzer & Assistant</h1>
+<div class="container">
+
+<h1>🧠 Stress Analyzer & Assistant</h1>
 
 <form method="POST">
 
@@ -85,29 +88,37 @@
         <option value="1">Yes</option>
     </select>
 
-    <br><br>
     <button type="submit">Analyze</button>
+
 </form>
 
 {% if prediction %}
+<div class="result">
     <h2>Stress Level: {{ prediction }}</h2>
+</div>
 {% endif %}
 
 {% if contributors and contributors|length > 0 %}
+<div class="result">
     <h3>Top Contributing Factors</h3>
     <ul>
         {% for c in contributors %}
             <li>{{ c }}</li>
         {% endfor %}
     </ul>
+</div>
 {% endif %}
 
 {% if llm_text %}
+<div class="result">
     <h3>Personalized Recommendations</h3>
-    <p style="white-space: pre-line;">
+    <p class="recommendation">
         {{ llm_text }}
     </p>
+</div>
 {% endif %}
+
+</div>
 
 </body>
 </html>

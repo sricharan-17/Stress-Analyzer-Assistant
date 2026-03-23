@@ -2,52 +2,65 @@ from flask import Flask, render_template, request, redirect, url_for
 import pandas as pd
 import joblib
 import shap
-import requests
+import os
+from dotenv import load_dotenv
+load_dotenv()
+from groq import Groq
+
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # -----------------------------
 # LLM helper
 # -----------------------------
-def get_llm_recommendations(stress_level, top_factors):
-    prompt = f"""
-You are a wellness assistant designed to support college students.
 
-The system has identified:
-- Predicted stress level: {stress_level}
+def get_llm_recommendations(stress_level, top_factors):
+    print("INSIDE LLM FUNCTION")
+    prompt = f"""
+You are a practical stress assistant for college students.
+
+Context:
+- Stress level: {stress_level}
 - Top contributing factors: {', '.join(top_factors)}
 
-Your task:
-1. Briefly restate the contributing factors in one sentence.
-2. For EACH factor, give 1–2 practical, non-medical suggestions.
+Task:
+1. Start with ONE short sentence listing the main stress factors.
+2. Then give 1–2 practical actions for EACH factor.
 
-Rules:
-- Address each factor individually.
-- Student-focused, realistic advice only.
-- No medical or therapy language.
-- No conclusions or meta commentary.
-- Short, actionable points.
+STRICT RULES:
+- No medical advice
+- No therapy suggestions
+- No helplines or crisis language
+- Do not assume extreme situations
+- Keep tone simple, calm, and realistic
+- Advice must be doable for a college student (limited time, limited money)
+- No long paragraphs
+- No motivational speeches
+- No conclusion at the end
+
+Focus on:
+- managing study workload
+- improving daily routine
+- sleep habits
+- basic budgeting (for financial stress)
+- small behavior changes
 
 Format:
 
-"Based on the analysis, the main factors contributing to your stress are: ...
+Based on the analysis, your main stress factors are: ...
 
 For [Factor]:
 - ...
 - ...
-"
 """
 
-    response = requests.post(
-        "http://localhost:11434/api/generate",
-        json={
-            "model": "llama3.1:8b",
-            "prompt": prompt,
-            "stream": False
-        },
-        timeout=60
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {"role": "user", "content": prompt}
+        ]
     )
 
-    return response.json()["response"].strip()
-
+    return response.choices[0].message.content
 
 # -----------------------------
 # App setup
@@ -154,17 +167,18 @@ def index():
         # LLM logic
         # -----------------------------
         try:
-            if prediction in ["Medium", "High"] and contributors:
+            if contributors:
+                print("CALLING GROQ...")
                 llm_text = get_llm_recommendations(prediction, contributors)
             else:
-                llm_text = (
-                    "Your stress level appears to be low. "
-                    "This suggests that you are managing your academic workload, sleep, "
-                    "and daily routines well. Maintaining these habits can help sustain "
-                    "your overall well-being."
-                )
-        except Exception:
-            llm_text = last_result["llm_text"]
+                llm_text = "No contributors found."
+
+        except Exception as e:
+            import traceback
+            print("========== LLM ERROR ==========")
+            traceback.print_exc()
+            print("================================")
+            llm_text = "LLM failed"
 
         # Store result
         last_result["prediction"] = prediction
@@ -185,5 +199,8 @@ def index():
 # -----------------------------
 # Run
 # -----------------------------
+import os
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
