@@ -85,7 +85,22 @@ if not os.path.exists(MODEL_PATH):
 
 # Load model
 model = joblib.load(MODEL_PATH)
-label_encoders = joblib.load("model/label_encoders.pkl")
+ENCODER_PATH = "model/label_encoders.pkl"
+
+if not os.path.exists(ENCODER_PATH):
+    print("Downloading encoders...")
+
+    encoder_url = "https://huggingface.co/sricharan007/Stress-Analyzer-Assistant-model/resolve/main/label_encoders.pkl"
+
+    os.makedirs("model", exist_ok=True)
+
+    r = requests.get(encoder_url)
+    with open(ENCODER_PATH, "wb") as f:
+        f.write(r.content)
+
+    print("Encoders downloaded.")
+
+label_encoders = joblib.load(ENCODER_PATH)
 
 categorical_cols = [
     "Gender",
