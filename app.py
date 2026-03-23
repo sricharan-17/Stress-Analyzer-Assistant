@@ -3,6 +3,7 @@ import pandas as pd
 import joblib
 import shap
 import os
+import requests
 from dotenv import load_dotenv
 load_dotenv()
 from groq import Groq
@@ -67,7 +68,23 @@ For [Factor]:
 # -----------------------------
 app = Flask(__name__)
 
-model = joblib.load("model/rf_stress_model_balanced.pkl")
+MODEL_PATH = "model/rf_stress_model_balanced.pkl"
+
+if not os.path.exists(MODEL_PATH):
+    print("Downloading model from Hugging Face...")
+
+    url = "https://huggingface.co/sricharan007/Stress-Analyzer-Assistant-model/resolve/main/rf_stress_model_balanced.pkl"
+
+    os.makedirs("model", exist_ok=True)
+
+    response = requests.get(url)
+    with open(MODEL_PATH, "wb") as f:
+        f.write(response.content)
+
+    print("Model downloaded successfully.")
+
+# Load model
+model = joblib.load(MODEL_PATH)
 label_encoders = joblib.load("model/label_encoders.pkl")
 
 categorical_cols = [

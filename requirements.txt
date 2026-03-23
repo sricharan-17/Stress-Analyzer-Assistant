@@ -5,3 +5,4 @@ shap
 joblib
 groq
 python-dotenv
+requests
